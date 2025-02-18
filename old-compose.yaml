@@ -1,0 +1,96 @@
+version: '3.8'
+
+networks:
+  redis_network:
+    driver: bridge
+
+services:
+  redis-master:
+    image: redis/redis-stack-server
+    container_name: redis-master
+    networks:
+      - redis_network
+    ports:
+      - "6379:6379"
+    command: [ "redis-server", "--protected-mode", "no" ]
+
+  redis-slave-1:
+    image: redis/redis-stack-server
+    container_name: redis-slave-1
+    networks:
+      - redis_network
+    ports:
+      - "6380:6379"
+    depends_on:
+      - redis-master
+    command: [ "redis-server", "--loadmodule", "/opt/redis-stack/lib/redisearch.so", "--slaveof", "redis-master", "6379", "--protected-mode", "no" ]
+
+  redis-slave-2:
+    image: redis/redis-stack-server
+    container_name: redis-slave-2
+    networks:
+      - redis_network
+    ports:
+      - "6381:6379"
+    depends_on:
+      - redis-master
+    command: [ "redis-server", "--loadmodule", "/opt/redis-stack/lib/redisearch.so", "--slaveof", "redis-master", "6379", "--protected-mode", "no" ]
+
+  redis-slave-3:
+    image: redis/redis-stack-server
+    container_name: redis-slave-3
+    networks:
+      - redis_network
+    ports:
+      - "6382:6379"
+    depends_on:
+      - redis-master
+    command: [ "redis-server", "--loadmodule", "/opt/redis-stack/lib/redisearch.so", "--slaveof", "redis-master", "6379", "--protected-mode", "no" ]
+
+  sentinel1:
+    image: redis/redis-stack-server
+    container_name: sentinel1
+    networks:
+      - redis_network
+    ports:
+      - "26379:26379"
+    volumes:
+      - "./sentinel.conf:/etc/redis/sentinel.conf"
+    depends_on:
+      - redis-master
+      - redis-slave-1
+      - redis-slave-2
+      - redis-slave-3
+    command: [ "redis-server", "/etc/redis/sentinel.conf", "--sentinel", "--loadmodule", "/opt/redis-stack/lib/redisearch.so" ]
+
+  sentinel2:
+    image: redis/redis-stack-server
+    container_name: sentinel2
+    networks:
+      - redis_network
+    ports:
+      - "26380:26379"
+    volumes:
+      - "./sentinel.conf:/etc/redis/sentinel.conf"
+    depends_on:
+      - redis-master
+      - redis-slave-1
+      - redis-slave-2
+      - redis-slave-3
+    command: [ "redis-server", "/etc/redis/sentinel.conf", "--sentinel", "--loadmodule", "/opt/redis-stack/lib/redisearch.so" ]
+
+  sentinel3:
+    image: redis/redis-stack-server
+    container_name: sentinel3
+    networks:
+      - redis_network
+    ports:
+      - "26381:26379"
+    volumes:
+      - "./sentinel.conf:/etc/redis/sentinel.conf"
+    depends_on:
+      - redis-master
+      - redis-slave-1
+      - redis-slave-2
+      - redis-slave-3
+    command: [ "redis-server", "/etc/redis/sentinel.conf", "--sentinel", "--loadmodule", "/opt/redis-stack/lib/redisearch.so" ]
