@@ -16,7 +16,7 @@ services:
         ipv4_address: 172.19.0.2 # Assign static IP
     ports:
       - "6379:6379"
-    command: [ "redis-server", "--protected-mode", "no" ]
+    command: [ "redis-server", "--loadmodule", "/opt/redis-stack/lib/redisearch.so", "--protected-mode", "no" ]
 
   redis-slave-1:
     image: redis/redis-stack-server
